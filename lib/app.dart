@@ -14,7 +14,32 @@ class _HomePageState extends State<HomePage> {
   final Gemini gemini = Gemini.instance;
   String? generatedResponse;
   bool isLoading = false;
-  TextEditingController controller = TextEditingController();
+  final TextEditingController controller = TextEditingController();
+
+  void _sendPrompt() {
+    final text = controller.text.trim();
+    if (text.isEmpty || isLoading) return;
+
+    setState(() {
+      isLoading = true;
+      generatedResponse = null;
+    });
+
+    gemini
+        .prompt(parts: [Part.text(text)])
+        .then((value) {
+          setState(() {
+            generatedResponse = value?.output;
+            isLoading = false;
+          });
+        })
+        .catchError((e) {
+          setState(() {
+            isLoading = false;
+          });
+          debugPrint('Error: $e');
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,58 +50,46 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text('Integration with Gemini'),
-              const SizedBox(height: 20),
-              TextField(
-                controller: controller,
-                style: const TextStyle(fontSize: 18),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Enter your prompt',
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    style: const TextStyle(fontSize: 18),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Ask anything',
+                    ),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendPrompt(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        onPressed: _sendPrompt,
+                        icon: const Icon(Icons.send),
+                      ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (generatedResponse != null)
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Text(
+                    generatedResponse ?? '-',
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
-              if (isLoading)
-                const CircularProgressIndicator()
-              else
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      gemini
-                          .prompt(parts: [Part.text(controller.text)])
-                          .then((value) {
-                            setState(() {
-                              generatedResponse = value?.output;
-                              isLoading = false;
-                            });
-                          })
-                          .catchError((e) {
-                            setState(() {
-                              () => isLoading = false;
-                              debugPrint('Error: $e');
-                            });
-                          });
-                    },
-                    child: const Text('Generate Response'),
-                  ),
-                ),
-              const SizedBox(height: 20),
-              if (generatedResponse != null)
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      generatedResponse ?? '-',
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
