@@ -65,6 +65,16 @@ class _HomePageState extends State<HomePage> {
                     child: const Text('Generate Response'),
                   ),
                 ),
+              const SizedBox(height: 20),
+              if (generatedResponse != null)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      generatedResponse ?? '-',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

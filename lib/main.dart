@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_with_gemini/app.dart';
+import 'package:flutter_with_gemini/constant.dart';
 
 void main() {
+  Gemini.init(apiKey: Constant.geminiApiKey);
   runApp(const MyApp());
 }
 
